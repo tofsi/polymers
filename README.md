@@ -1,2 +1,2 @@
 # polymers
-Freely-jointed chain, self avoiding as well as not self avoiding
+Comparison of the self avoiding and non-self avoiding versions of the freely jointed chain model for polymers.
