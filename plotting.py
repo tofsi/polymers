@@ -1,5 +1,7 @@
-from main import *
+from polymer import *
 from polymers_stats import PolymerStats
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 plt.style.use("seaborn-v0_8")
 
@@ -33,20 +35,21 @@ def plot_spheres(centers, radius, resolution, ax):
         )
 
 
-def plot_kuhn_chain(l, N, monomer_radius=0.0):
-    kuhn_chain = gen_self_avoiding_chain(l, monomer_radius, N)
+def plot_p(l, N, monomer_radius=0.0):
+    p = SelfAvoidingKuhnPolymer(l, N, monomer_radius)
+    # p = gen_self_avoiding_chain(l, monomer_radius, N)
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
     ax.plot(
-        kuhn_chain[:, 0],
-        kuhn_chain[:, 1],
-        kuhn_chain[:, 2],
+        p.chain[:, 0],
+        p.chain[:, 1],
+        p.chain[:, 2],
         linestyle="-",
         linewidth=5.0,
         c="orange",
     )
-    plot_spheres(kuhn_chain, monomer_radius, 40, ax)
+    plot_spheres(p.chain, monomer_radius, 40, ax)
     ax.set_aspect("equal")
     plt.show()
 
@@ -56,9 +59,7 @@ def plot_mean_r_squared(n_draws_list, N_list, l, monomer_radius, ax):
     if len(n_draws_list) != len(N_list):
         raise ValueError("n_draws must be of same length as N")
     for n_draws, N in zip(n_draws_list, N_list):
-        polymer_info.append(
-            PolymerStats(n_draws, N, gen_self_avoiding_chain, (l, monomer_radius, N))
-        )
+        polymer_info.append(PolymerStats(n_draws, N, 0, (l, monomer_radius, N)))
     ax.plot(
         [p.mean_r_squared for p in polymer_info],
         linestyle="--",
@@ -70,8 +71,8 @@ def plot_mean_r_squared(n_draws_list, N_list, l, monomer_radius, ax):
 
 
 def main():
-    # plot_kuhn_chain(1.0, 70, 0.45)
-    pass
+    plot_p(1.0, 70, 0.45)
+    # pass
 
 
 if __name__ == "__main__":

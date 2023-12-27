@@ -1,4 +1,4 @@
-from main import *
+from polymer import *
 from scipy import stats
 
 
