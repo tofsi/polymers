@@ -37,7 +37,7 @@ def plot_spheres(centers, radius, resolution, ax):
 
 def plot_p(l, N, monomer_radius=0.0):
     p = SelfAvoidingKuhnPolymer(l, N, monomer_radius)
-    # p = gen_self_avoiding_chain(l, monomer_radius, N)
+    # p = gen_self_avoiding_chain(l, monomer_radius, N)s
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
