@@ -1,9 +1,9 @@
 from polymer import *
-from polymers_stats import PolymerStats
+from polymers_stats import PolymerSample
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-plt.style.use("seaborn-v0_8")
+plt.style.use("seaborn-v0_8-dark")
 
 
 def plot_sphere_variates():
@@ -54,25 +54,32 @@ def plot_p(l, N, monomer_radius=0.0):
     plt.show()
 
 
-def plot_mean_r_squared(n_draws_list, N_list, l, monomer_radius, ax):
-    polymer_info = []
+def plot_mean_r_squared(n_draws_list, N_list, l, ax, theoretical_func):
     if len(n_draws_list) != len(N_list):
         raise ValueError("n_draws must be of same length as N")
+    mean_r_squared = []
     for n_draws, N in zip(n_draws_list, N_list):
-        polymer_info.append(PolymerStats(n_draws, N, 0, (l, monomer_radius, N)))
+        mean_r_squared.append(
+            PolymerSample(n_draws, N, KuhnPolymer, (l, N)).mean_r_squared
+        )
     ax.plot(
-        [p.mean_r_squared for p in polymer_info],
-        linestyle="--",
+        mean_r_squared,
+        linestyle="-",
         marker="o",
         c="purple",
         mec="cyan",
         mfc="cyan",
     )
+    if theoretical_func:
+        ax.plot(N_list, [theoretical_func(N) for N in N_list])
+        ax.legend(["Sample", "Theoretical"])
 
 
 def main():
-    plot_p(1.0, 70, 0.45)
-    # pass
+    # plot_p(1.0, 70, 0.45)
+    fig, ax = plt.subplots()
+    plot_mean_r_squared([2000] * 1000, list(range(2, 1002)), 1.0, ax, lambda N: N)
+    plt.show()
 
 
 if __name__ == "__main__":

@@ -41,7 +41,10 @@ class Polymer:
 
     def __init__(self, l, N):
         self.l = l
+        if N < 2:
+            raise ValueError("Length of chain must be at least 2")
         self.N = N
+
         self.chain = self.generate()
 
     def generate(self):
