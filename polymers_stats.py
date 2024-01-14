@@ -7,11 +7,11 @@ plt.style.use("seaborn-v0_8-dark")
 
 
 class PolymerSample:
-    def __init__(self, n_draws, N, polymer_class, polymer_args):
+    def __init__(self, n_draws, polymer):
         self.r_squared = np.zeros(n_draws, dtype=float)
-        self.chains = np.zeros([n_draws, N, 3], dtype=float)
+        self.chains = np.zeros([n_draws, polymer.N + 1, 3], dtype=float)
 
-        self.polymer = polymer_class(*polymer_args)
+        self.polymer = polymer
         for i in range(n_draws):
             self.chains[i, :, :] = self.polymer.chain
             self.r_squared[i] = distance_squared(
@@ -36,7 +36,7 @@ def main():
     r_squared = np.zeros(1000, dtype=float)
     N_values = [i for i in range(1, 1001)]
     for i, N in enumerate(N_values):
-        r_squared[i] = PolymerSample(100, N, KuhnPolymer, (1.0, N)).mean_r_squared
+        r_squared[i] = PolymerSample(100, N, KuhnPolymer(1.0, N)).mean_r_squared
     plt.plot(N_values, r_squared, marker="o")
     plt.show()
 

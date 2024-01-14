@@ -16,10 +16,7 @@ def gen_sphere_uniform_variates(l, N):
     result[:, 1] = l * sin_theta * np.sin(phi)
     result[:, 2] = l * cos_theta
 
-    if N == 1:
-        return result[0, :]  # 1d array
-    else:
-        return result  # 2d array
+    return result  # 2d
 
 
 def distance_squared(p1, p2):
@@ -28,7 +25,6 @@ def distance_squared(p1, p2):
 
 
 def self_avoiding(chain, min_distance_squared):
-    N = chain.shape[0]
     for i, first_monomer in enumerate(chain):
         for j in range(max([0, i - 2])):
             if distance_squared(first_monomer, chain[j]) < min_distance_squared:
@@ -41,14 +37,14 @@ class Polymer:
 
     def __init__(self, l, N):
         self.l = l
-        if N < 2:
-            raise ValueError("Length of chain must be at least 2")
+        if N < 1:
+            raise ValueError("Length of chain must be at least 1")
         self.N = N
 
         self.chain = self.generate()
 
     def generate(self):
-        return np.zeros([self.N, 3], dtype=float)
+        return np.zeros([self.N + 1, 3], dtype=float)
 
 
 class KuhnPolymer(Polymer):
@@ -59,7 +55,7 @@ class KuhnPolymer(Polymer):
 
     def generate(self):
         monomers = gen_sphere_uniform_variates(self.l, self.N)
-        return monomers.cumsum(axis=0)
+        return np.concatenate((np.zeros([1, 3], dtype=float), monomers.cumsum(axis=0)))
 
 
 class SelfAvoidingKuhnPolymer(KuhnPolymer):

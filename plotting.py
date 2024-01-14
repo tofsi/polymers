@@ -3,7 +3,7 @@ from polymers_stats import PolymerSample
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-plt.style.use("seaborn-v0_8-dark")
+plt.style.use("seaborn-v0_8")
 
 
 def plot_sphere_variates():
@@ -54,31 +54,39 @@ def plot_p(l, N, monomer_radius=0.0):
     plt.show()
 
 
-def plot_mean_r_squared(n_draws_list, N_list, l, ax, theoretical_func):
-    if len(n_draws_list) != len(N_list):
-        raise ValueError("n_draws must be of same length as N")
-    mean_r_squared = []
-    for n_draws, N in zip(n_draws_list, N_list):
-        mean_r_squared.append(
-            PolymerSample(n_draws, N, KuhnPolymer, (l, N)).mean_r_squared
+def plot_mean_r_squared(polymer_sample_dict, ax, theoretical_func):
+    for polymer_samples in polymer_sample_dict.values():
+        N_values = list(map(lambda s: s.polymer.N, polymer_samples))
+        mean_r_squared_values = list(map(lambda s: s.mean_r_squared, polymer_samples))
+        ax.plot(
+            N_values,
+            mean_r_squared_values,
+            linestyle="--",
+            marker="o",
         )
-    ax.plot(
-        mean_r_squared,
-        linestyle="-",
-        marker="o",
-        c="purple",
-        mec="cyan",
-        mfc="cyan",
-    )
     if theoretical_func:
-        ax.plot(N_list, [theoretical_func(N) for N in N_list])
-        ax.legend(["Sample", "Theoretical"])
+        ax.plot(N_values, list(map(theoretical_func, N_values)))
+        ax.legend([*polymer_sample_dict.keys(), "Theoretical"])
+    else:
+        ax.legend(polymer_sample_dict.keys())
 
 
 def main():
-    # plot_p(1.0, 70, 0.45)
+    # plot_p(1.0, 59, 0.45)
     fig, ax = plt.subplots()
-    plot_mean_r_squared([2000] * 1000, list(range(2, 1002)), 1.0, ax, lambda N: N)
+    N_values = list(range(2, 50, 10))
+
+    kuhn_samples = list(
+        map(lambda N: PolymerSample(10000, KuhnPolymer(1.0, N)), N_values)
+    )
+    saw_samples = list(
+        map(lambda N: PolymerSample(10, SelfAvoidingKuhnPolymer(1.0, N, 0.5)), N_values)
+    )
+    plot_mean_r_squared(
+        {"Kuhn Chain": kuhn_samples, "Self Avoiding Chain": saw_samples},
+        ax,
+        lambda N: N,
+    )
     plt.show()
 
 
