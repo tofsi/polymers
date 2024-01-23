@@ -3,7 +3,8 @@ from polymers_stats import PolymerSample
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-plt.style.use("seaborn-v0_8")
+# plt.style.use("seaborn-v0_8-dark")
+sns.set_style("whitegrid")
 
 
 def plot_sphere_variates():
@@ -35,9 +36,7 @@ def plot_spheres(centers, radius, resolution, ax):
         )
 
 
-def plot_p(l, N, monomer_radius=0.0):
-    p = SelfAvoidingKuhnPolymer(l, N, monomer_radius)
-    # p = gen_self_avoiding_chain(l, monomer_radius, N)s
+def plot_p(p):
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
@@ -49,7 +48,9 @@ def plot_p(l, N, monomer_radius=0.0):
         linewidth=5.0,
         c="orange",
     )
-    plot_spheres(p.chain, monomer_radius, 40, ax)
+    if hasattr(p, "monomer_radius"):
+        plot_spheres(p.chain, p.monomer_radius, 40, ax)
+
     ax.set_aspect("equal")
     plt.show()
 
@@ -90,5 +91,9 @@ def main():
     plt.show()
 
 
+def main2():
+    plot_p(SelfAvoidingLatticePolymer(120))
+
+
 if __name__ == "__main__":
-    main()
+    main2()

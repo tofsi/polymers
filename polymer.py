@@ -1,5 +1,10 @@
 import numpy as np
+from random import choice
 import itertools
+
+
+class MaxIterationsExceededError(Exception):
+    pass
 
 
 # Adapted from "Generating uniformly distributed numbers on a sphere"
@@ -16,7 +21,7 @@ def gen_sphere_uniform_variates(l, N):
     result[:, 1] = l * sin_theta * np.sin(phi)
     result[:, 2] = l * cos_theta
 
-    return result  # 2d
+    return result
 
 
 def distance_squared(p1, p2):
@@ -24,10 +29,18 @@ def distance_squared(p1, p2):
     return np.dot(diff, diff)
 
 
-def self_avoiding(chain, min_distance_squared):
+def is_self_avoiding(chain, min_distance_squared):
     for i, first_monomer in enumerate(chain):
         for j in range(max([0, i - 2])):
             if distance_squared(first_monomer, chain[j]) < min_distance_squared:
+                return False
+    return True
+
+
+def is_self_avoiding_lattice(chain):
+    for i, first_monomer in enumerate(chain):
+        for j in range(max([0, i - 2])):
+            if tuple(first_monomer) == tuple(chain[j]):
                 return False
     return True
 
@@ -74,11 +87,52 @@ class SelfAvoidingKuhnPolymer(KuhnPolymer):
         min_distance_squared = (self.monomer_radius * 2) ** 2
         chain = super(SelfAvoidingKuhnPolymer, self).generate()
         i = 1
-        while (
-            not self_avoiding(chain, min_distance_squared) and i < self.max_iterations
-        ):
+        while not is_self_avoiding(chain, min_distance_squared):
             chain = super(SelfAvoidingKuhnPolymer, self).generate()
             i += 1
+            if i >= self.max_iterations:
+                raise MaxIterationsExceededError(
+                    "Maximum iterations exceeded when generating polymer"
+                )
+        return chain
+
+
+class LatticePolymer(Polymer):
+    def __init__(self, N):
+        super(LatticePolymer, self).__init__(1, N)
+
+    def generate(self):
+        monomers = np.zeros([self.N, 3], dtype=int)
+        directions = [
+            (1, 0, 0),
+            (0, 1, 0),
+            (0, 0, 1),
+            (-1, 0, 0),
+            (0, -1, 0),
+            (0, 0, -1),
+        ]
+        for i, previous_monomer in enumerate(monomers[:-1, :]):
+            monomers[i + 1, :] = choice(
+                list(filter(lambda d: d != tuple(-1 * previous_monomer), directions))
+            )
+        return np.concatenate((np.zeros([1, 3], dtype=int), monomers.cumsum(axis=0)))
+
+
+class SelfAvoidingLatticePolymer(LatticePolymer):
+    def __init__(self, N, max_iterations=np.inf):
+        self.max_iterations = max_iterations
+        super(LatticePolymer, self).__init__(1, N)
+
+    def generate(self):
+        chain = super(SelfAvoidingLatticePolymer, self).generate()
+        i = 0
+        while not is_self_avoiding_lattice(chain):
+            chain = super(SelfAvoidingLatticePolymer, self).generate()
+            i += 1
+            if i >= self.max_iterations:
+                raise MaxIterationsExceededError(
+                    "Maximum iterations exceeded when generating polymer"
+                )
         return chain
 
 
