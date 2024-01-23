@@ -36,7 +36,7 @@ def main():
     r_squared = np.zeros(1000, dtype=float)
     N_values = [i for i in range(1, 1001)]
     for i, N in enumerate(N_values):
-        r_squared[i] = PolymerSample(100, N, KuhnPolymer(1.0, N)).mean_r_squared
+        r_squared[i] = PolymerSample(100, KuhnPolymer(1.0, N)).mean_r_squared
     plt.plot(N_values, r_squared, marker="o")
     plt.show()
 
