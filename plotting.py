@@ -92,7 +92,8 @@ def main():
 
 
 def main2():
-    plot_p(SelfAvoidingLatticePolymer(120))
+    while True:
+        plot_p(SelfAvoidingKuhnPolymer(1.0, 110, 0.5))
 
 
 if __name__ == "__main__":
