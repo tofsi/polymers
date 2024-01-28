@@ -1,10 +1,13 @@
 from polymer import *
 from polymers_stats import PolymerSample
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-# plt.style.use("seaborn-v0_8-dark")
-sns.set_style("whitegrid")
+
+from statsmodels.graphics.gofplots import qqplot
+import scipy.stats as stats
+
+plt.style.use("seaborn-v0_8")
+# sns.set_style("whitegrid")
 
 
 def plot_sphere_variates():
@@ -55,40 +58,95 @@ def plot_p(p):
     plt.show()
 
 
-def plot_mean_r_squared(polymer_sample_dict, ax, theoretical_func):
-    for polymer_samples in polymer_sample_dict.values():
-        N_values = list(map(lambda s: s.polymer.N, polymer_samples))
-        mean_r_squared_values = list(map(lambda s: s.mean_r_squared, polymer_samples))
-        ax.plot(
-            N_values,
-            mean_r_squared_values,
-            linestyle="--",
-            marker="o",
+def plot_Cn(polymer_sample_dict, ax):
+    for name, polymer_samples in polymer_sample_dict.items():
+        n_values = list(map(lambda s: s.polymer.n, polymer_samples))
+        C_n_values = list(map(lambda s: np.mean(s.C_n), polymer_samples))
+        ax.plot(n_values, C_n_values, linestyle="--", marker="o", label=name)
+
+
+def end_distributions():
+    n_samples = 1000
+
+    kuhn_sample = PolymerSample(n_samples, KuhnPolymer(1.0, 70))
+    self_avoiding_kuhn_sample = PolymerSample(
+        n_samples, SelfAvoidingKuhnPolymer(1.0, 70, 1.0 / np.sqrt(5))
+    )
+    lattice_sample = PolymerSample(n_samples, LatticePolymer(70))
+    self_avoiding_lattice_sample = PolymerSample(
+        n_samples, SelfAvoidingLatticePolymer(70)
+    )
+
+    samples = {
+        "Freely Jointed": kuhn_sample,
+        "Freely Jointed (Self Avoiding)": self_avoiding_kuhn_sample,
+        "Integer Lattice": lattice_sample,
+        "Integer Lattice (Self Avoiding)": self_avoiding_lattice_sample,
+    }
+
+    fig, ax = plt.subplots(2, 2, figsize=(10, 10))
+
+    for i, name_and_sample in enumerate(samples.items()):
+        name, sample = name_and_sample
+        components = sample.end_to_end.reshape([3 * n_samples])
+
+        print(
+            "{}: mean {}, Standard Deviation {}".format(
+                name, components.mean(), components.std()
+            )
         )
-    if theoretical_func:
-        ax.plot(N_values, list(map(theoretical_func, N_values)))
-        ax.legend([*polymer_sample_dict.keys(), "Theoretical"])
-    else:
-        ax.legend(polymer_sample_dict.keys())
+
+        qqplot(components, ax=ax[i % 2, i // 2], line="r")
+        ax[i % 2, i // 2].set_title(name)
+
+    plt.savefig("images/qqplots.eps")
 
 
-def main():
+def C_n_plots():
     # plot_p(1.0, 59, 0.45)
     fig, ax = plt.subplots()
-    N_values = list(range(2, 50, 10))
-
+    n_max = 70
+    n_points = 10
+    n_values = np.exp(np.linspace(0, np.log(n_max), n_points)).astype(int)
+    n_draws = 1000
+    lattice_samples = list(
+        map(lambda n: PolymerSample(n_draws, LatticePolymer(n)), n_values)
+    )
+    saw_lattice_samples = list(
+        map(lambda n: PolymerSample(n_draws, SelfAvoidingLatticePolymer(n)), n_values)
+    )
     kuhn_samples = list(
-        map(lambda N: PolymerSample(10000, KuhnPolymer(1.0, N)), N_values)
+        map(lambda n: PolymerSample(n_draws, KuhnPolymer(1, n)), n_values)
     )
-    saw_samples = list(
-        map(lambda N: PolymerSample(10, SelfAvoidingKuhnPolymer(1.0, N, 0.5)), N_values)
+    saw_kuhn_samples = list(
+        map(
+            lambda n: PolymerSample(
+                n_draws, SelfAvoidingKuhnPolymer(1, n, 1 / np.sqrt(5))
+            ),
+            n_values,
+        )
     )
-    plot_mean_r_squared(
-        {"Kuhn Chain": kuhn_samples, "Self Avoiding Chain": saw_samples},
-        ax,
-        lambda N: N,
+
+    samples = {
+        "Freely Jointed": kuhn_samples,
+        "Freely Jointed (Self Avoiding)": saw_kuhn_samples,
+        "Integer Lattice": lattice_samples,
+        "Integer Lattice (Self Avoiding)": saw_lattice_samples,
+    }
+    plot_Cn(samples, ax)
+
+    n_range = np.array(range(1, n_max))
+    ax.plot(
+        n_range,
+        (7 * n_range - 2) / (5 * n_range),
+        label="Lower Bound (Self Avoiding)",
     )
-    plt.show()
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("n")
+    ax.set_ylabel("mean square end-to-end distance")
+    ax.legend()
+    plt.savefig("log_C_n_plot.eps")
 
 
 def main2():
@@ -97,4 +155,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main2()
+    C_n_plots()
